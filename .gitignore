@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# Runtime outputs
+runtime/trace.json
+runtime/_bench_*.json
+runtime/operacional.db
+runtime/operacional.db-*
+runtime/resultados/
+
+# Benchmark/generated reports
+benchmarks/*.json
+benchmarks/report.md
+evals/resultados/
+agents/ai-support-operations-agent/resultados/
+
+# Agent-generated memory/reflection stores
+agents/memory_store/
+agents/reflection_store/
+
+# Local databases generated during execution
+*.db-journal
+*.db-shm
+*.db-wal
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

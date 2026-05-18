@@ -1,0 +1,9 @@
+suite: rag
+agente: ai-support-operations-agent
+cenarios:
+  - id: resposta_depende_rag
+    entrada: "SUP-9001: erro 500 no login."
+    esperado:
+      buscar_documentacao_antes_de_draft: true
+      documentos_consultados_na_saida: true
+      evitar_afirmacoes_sem_evidencia: true

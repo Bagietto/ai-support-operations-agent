@@ -1,0 +1,31 @@
+[
+  {
+    "id": "padrao_login_recorrente",
+    "entrada": "SUP-5100: erro 500 intermitente no login apos deploy do identity-service.",
+    "contexto_esperado": {
+      "fatos_relevantes": [
+        "login",
+        "identity-platform",
+        "erro 500"
+      ],
+      "episodios_relevantes": [
+        "tickets similares de login em producao"
+      ],
+      "licoes_relevantes": [
+        "consultar incidentes ativos antes do draft"
+      ]
+    }
+  },
+  {
+    "id": "ticket_ambiguo",
+    "entrada": "SUP-5200: o sistema nao funciona direito.",
+    "contexto_esperado": {
+      "fatos_relevantes": [
+        "ticket ambiguo",
+        "solicitar complemento"
+      ],
+      "episodios_relevantes": [],
+      "licoes_relevantes": []
+    }
+  }
+]

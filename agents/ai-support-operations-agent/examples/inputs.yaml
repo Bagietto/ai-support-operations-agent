@@ -1,0 +1,26 @@
+exemplos:
+  - nome: erro_500_login
+    entrada:
+      ticket_id: SUP-1042
+      titulo: Erro 500 no login
+      descricao: Desde hoje pela manha todos os usuarios recebem erro 500 ao tentar login. Estamos bloqueados em producao.
+      cliente: Empresa Exemplo
+      produto: plataforma-web
+      canal: portal
+      idioma: pt-BR
+      data_abertura: "2026-05-18T09:15:00-03:00"
+      plano_cliente: enterprise
+      ambiente: production
+
+  - nome: duvida_exportacao_pdf
+    entrada:
+      ticket_id: SUP-3001
+      titulo: Exportar relatorio
+      descricao: Como exporto meu relatorio em PDF?
+      cliente: Cliente Exemplo
+      produto: analytics
+      canal: chat
+      idioma: pt-BR
+      data_abertura: "2026-05-18T10:30:00-03:00"
+      plano_cliente: basic
+      ambiente: production

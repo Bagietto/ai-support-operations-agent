@@ -1,0 +1,81 @@
+[
+  {
+    "id": "inicio_de_ticket",
+    "entrada": "SUP-1042: erro 500 no login em producao.",
+    "etapa": 1,
+    "contexto": "Nenhuma ferramenta chamada ainda.",
+    "ferramentas_ja_usadas": [],
+    "tool_esperada": "classificar_ticket",
+    "argumentos_esperados": {
+      "ticket_id": "SUP-1042"
+    },
+    "tools_nao_esperadas": [
+      "gerar_draft_resposta",
+      "registrar_auditoria"
+    ],
+    "justificativa": "O primeiro passo deve classificar o ticket."
+  },
+  {
+    "id": "apos_classificacao",
+    "entrada": "SUP-1042: erro 500 no login em producao.",
+    "etapa": 2,
+    "contexto": "classificar_ticket ja retornou categoria authentication e subcategoria login_failure.",
+    "ferramentas_ja_usadas": [
+      "classificar_ticket"
+    ],
+    "tool_esperada": "calcular_prioridade",
+    "argumentos_esperados": {
+      "ticket_id": "SUP-1042"
+    },
+    "tools_nao_esperadas": [
+      "gerar_draft_resposta",
+      "registrar_auditoria"
+    ],
+    "justificativa": "Depois de classificar, o agente deve calcular prioridade."
+  },
+  {
+    "id": "antes_do_draft",
+    "entrada": "SUP-1042: erro 500 no login em producao.",
+    "etapa": 4,
+    "contexto": "classificacao, prioridade e sentimento ja foram calculados.",
+    "ferramentas_ja_usadas": [
+      "classificar_ticket",
+      "calcular_prioridade",
+      "analisar_sentimento"
+    ],
+    "tool_esperada": "buscar_documentacao",
+    "argumentos_esperados": {
+      "categoria": "authentication"
+    },
+    "tools_nao_esperadas": [
+      "gerar_draft_resposta",
+      "registrar_auditoria"
+    ],
+    "justificativa": "RAG deve acontecer antes do draft."
+  },
+  {
+    "id": "finalizacao",
+    "entrada": "SUP-1042: erro 500 no login em producao.",
+    "etapa": 10,
+    "contexto": "Todas as ferramentas de analise ja foram chamadas, falta auditoria.",
+    "ferramentas_ja_usadas": [
+      "classificar_ticket",
+      "calcular_prioridade",
+      "analisar_sentimento",
+      "buscar_documentacao",
+      "buscar_tickets_similares",
+      "consultar_incidentes",
+      "gerar_draft_resposta",
+      "sugerir_roteamento",
+      "gerar_veredito_suporte"
+    ],
+    "tool_esperada": "registrar_auditoria",
+    "argumentos_esperados": {
+      "ticket_id": "SUP-1042"
+    },
+    "tools_nao_esperadas": [
+      "gerar_draft_resposta"
+    ],
+    "justificativa": "A auditoria deve ser a ultima ferramenta antes de finalizar."
+  }
+]

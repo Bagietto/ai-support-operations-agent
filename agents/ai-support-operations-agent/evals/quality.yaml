@@ -1,0 +1,13 @@
+suite: quality
+agente: ai-support-operations-agent
+dataset: quality_dataset.json
+limiares:
+  taxa_conclusao: 80
+  cobertura_ferramentas: 90
+  taxa_sucesso_ferramentas: 90
+metricas:
+  - taxa_conclusao
+  - cobertura_ferramentas
+  - taxa_sucesso_ferramentas
+  - media_etapas
+  - media_tokens

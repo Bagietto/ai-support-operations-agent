@@ -1,0 +1,17 @@
+suite: memory_impact
+agente: ai-support-operations-agent
+dataset: memory_impact_dataset.json
+metrics:
+  - retrieval_precision
+  - retrieval_recall
+  - memory_utilization
+  - hallucination_from_memory
+  - decision_improvement
+  - lesson_quality
+thresholds:
+  retrieval_precision: 0.5
+  retrieval_recall: 0.5
+  memory_utilization: 0.2
+  hallucination_from_memory: 0.5
+  decision_improvement: 0.0
+  lesson_quality: 0.0

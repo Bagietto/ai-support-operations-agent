@@ -1,0 +1,66 @@
+[
+  {
+    "id": "erro_500_login",
+    "entrada": "SUP-1042: desde hoje pela manha todos os usuarios da minha equipe recebem erro 500 ao tentar login em producao.",
+    "ferramentas_esperadas": [
+      "classificar_ticket",
+      "calcular_prioridade",
+      "analisar_sentimento",
+      "buscar_documentacao",
+      "buscar_tickets_similares",
+      "consultar_incidentes",
+      "gerar_draft_resposta",
+      "sugerir_roteamento",
+      "gerar_veredito_suporte",
+      "registrar_auditoria"
+    ]
+  },
+  {
+    "id": "cobranca_indevida",
+    "entrada": "SUP-2044: fui cobrado duas vezes este mes no cartao. Preciso cancelar uma das cobrancas.",
+    "ferramentas_esperadas": [
+      "classificar_ticket",
+      "calcular_prioridade",
+      "analisar_sentimento",
+      "buscar_documentacao",
+      "buscar_tickets_similares",
+      "consultar_incidentes",
+      "gerar_draft_resposta",
+      "sugerir_roteamento",
+      "gerar_veredito_suporte",
+      "registrar_auditoria"
+    ]
+  },
+  {
+    "id": "duvida_simples",
+    "entrada": "SUP-3001: como exporto meu relatorio em PDF?",
+    "ferramentas_esperadas": [
+      "classificar_ticket",
+      "calcular_prioridade",
+      "analisar_sentimento",
+      "buscar_documentacao",
+      "buscar_tickets_similares",
+      "consultar_incidentes",
+      "gerar_draft_resposta",
+      "sugerir_roteamento",
+      "gerar_veredito_suporte",
+      "registrar_auditoria"
+    ]
+  },
+  {
+    "id": "ticket_ambiguo",
+    "entrada": "SUP-4001: o sistema nao funciona direito.",
+    "ferramentas_esperadas": [
+      "classificar_ticket",
+      "calcular_prioridade",
+      "analisar_sentimento",
+      "buscar_documentacao",
+      "buscar_tickets_similares",
+      "consultar_incidentes",
+      "gerar_draft_resposta",
+      "sugerir_roteamento",
+      "gerar_veredito_suporte",
+      "registrar_auditoria"
+    ]
+  }
+]

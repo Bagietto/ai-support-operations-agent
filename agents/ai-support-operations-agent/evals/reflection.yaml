@@ -1,0 +1,10 @@
+suite: reflection
+agente: ai-support-operations-agent
+cenarios:
+  - id: revisar_finalizacao
+    entrada: "SUP-9100: lentidao no dashboard em producao."
+    esperado:
+      reflection_executada: true
+      criterio_prioridade_coerente: true
+      criterio_sem_promessa_sla: true
+      criterio_confidence_justificado: true

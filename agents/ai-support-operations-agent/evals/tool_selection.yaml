@@ -1,0 +1,8 @@
+suite: tool_selection
+agente: ai-support-operations-agent
+dataset: tool_selection_dataset.json
+limiares:
+  tool_selection_accuracy: 0.7
+  argument_accuracy: 0.7
+  unnecessary_calls_rate: 0.1
+  wrong_tool_rate: 0.3

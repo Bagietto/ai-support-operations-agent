@@ -1,0 +1,17 @@
+suite: routing
+agente: ai-support-operations-agent
+cenarios:
+  - id: autenticacao
+    entrada: "SUP-8001: usuarios nao conseguem logar com SSO."
+    esperado:
+      time_recomendado: identity-platform
+
+  - id: performance_dashboard
+    entrada: "SUP-8002: dashboard leva mais de 30 segundos para abrir."
+    esperado:
+      time_recomendado: platform-operations
+
+  - id: exportacao_pdf
+    entrada: "SUP-8003: como exportar relatorio em PDF?"
+    esperado:
+      time_recomendado: customer-success
