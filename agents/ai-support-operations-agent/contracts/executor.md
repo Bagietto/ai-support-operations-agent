@@ -11,13 +11,13 @@ execucao:
   fallback_em_falha:
     buscar_documentacao:
       - cache_local
-      - mock
+      - local
       - arquivo
     buscar_tickets_similares:
-      - mock
+      - local
       - arquivo
     consultar_incidentes:
-      - mock
+      - local
       - arquivo
 
 pos_execucao:

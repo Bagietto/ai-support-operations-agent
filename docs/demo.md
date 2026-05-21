@@ -9,7 +9,6 @@ cd runtime
 python -m pip install -r requirements.txt
 $env:PYTHON_DOTENV_DISABLED="1"
 $env:OPENAI_API_KEY=""
-$env:AGENT_MOCK_MODE="deterministic"
 $env:DB_CONNECTION_STRING="../dados/suporte.db"
 ```
 

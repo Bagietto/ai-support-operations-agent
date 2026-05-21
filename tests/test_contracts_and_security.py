@@ -37,6 +37,17 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(resultado["subcategoria"], "order_creation_failure")
         self.assertEqual(resultado["fila"], "support.sales-orders")
 
+    def test_portfolio_agent_skills_do_not_depend_on_mock_implementations(self):
+        contratos = carregar_contratos(AGENT)
+        habilidades = contratos["habilidades"]["habilidades"]
+
+        tipos = {habilidade["nome"]: habilidade.get("tipo_implementacao") for habilidade in habilidades}
+
+        self.assertNotIn("mock", tipos.values())
+        self.assertEqual(tipos["buscar_tickets_similares"], "database")
+        self.assertEqual(tipos["classificar_ticket"], "local")
+        self.assertEqual(tipos["registrar_auditoria"], "local")
+
 
 class SqlSecurityTests(unittest.TestCase):
     def test_read_only_rejects_dangerous_templates(self):

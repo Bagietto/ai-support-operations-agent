@@ -1,19 +1,89 @@
 # AI Support Operations Agent
 
-Agent Pack declarativo para operações de suporte técnico. O projeto modela um agente de IA que recebe tickets, coleta evidências, consulta conhecimento operacional, calcula prioridade, sugere roteamento, gera um rascunho de resposta e registra auditoria sem executar ações sensíveis automaticamente.
+Agente de IA para triagem operacional de tickets de suporte. Ele recebe um ticket em texto livre, coleta evidências, consulta conhecimento operacional, busca casos similares, calcula prioridade, sugere roteamento e gera uma recomendação auditável sem executar ações sensíveis automaticamente.
 
-Ele foi pensado como um laboratório de runtime contract-driven: o comportamento do agente fica descrito em arquivos Markdown/YAML versionáveis, enquanto o runtime interpreta esses contratos para validar, executar, rastrear, comparar arquiteturas e medir qualidade.
+O projeto foi construído como portfólio técnico: não é apenas um prompt, mas um runtime contract-driven com skills versionáveis, adapters locais, SQLite, trace, replay, benchmark e comparação entre arquiteturas cognitivas.
 
-## Por que este projeto é relevante
+![Demo CLI do agente](docs/assets/demo-cli.svg)
 
-Este repositório demonstra um agente de suporte construído como sistema avaliável, não apenas como um prompt. A proposta é mostrar decisões de engenharia aplicadas a agentes autônomos:
+## Problema resolvido
 
-- contratos versionáveis para comportamento, ferramentas, memória, reflexão e governança;
-- runtime próprio com CLI, rastreamento, telemetria e replay;
-- comparação entre arquiteturas cognitivas (`react`, `plan_execute` e `reflect`);
-- guardrails para aprovação humana, baixa confiança e ações sensíveis;
-- integração com SQLite usando queries parametrizadas e modo `read_only`;
-- evals e benchmarks reproduzíveis em modo determinístico, sem depender de credenciais externas.
+Times de suporte gastam tempo classificando tickets manualmente, procurando documentação, conferindo incidentes ativos e decidindo para qual fila o caso deve ir. Esse processo costuma gerar inconsistência operacional, roteamento errado e respostas sem evidência suficiente.
+
+O agente reduz:
+
+- tempo de triagem inicial;
+- risco de decisão sem evidência;
+- inconsistência entre atendentes;
+- tickets roteados para filas incorretas;
+- respostas apressadas em incidentes críticos;
+- perda de rastreabilidade sobre por que uma decisão foi tomada.
+
+## O que ele demonstra
+
+- Agent Pack declarativo em Markdown/YAML para comportamento, regras, skills, memória e reflexão.
+- Runtime próprio com ciclo `perceber -> planejar -> agir -> avaliar`.
+- Skills reais de domínio via adapter `local` e consulta histórica via SQLite.
+- Guardrails para baixa confiança, prioridade crítica e aprovação humana.
+- Trace auditável, replay, telemetria, evals e benchmarks.
+- Comparação entre arquiteturas `react`, `plan_execute` e `reflect`.
+
+## Demo rápida
+
+```powershell
+cd runtime
+$env:PYTHON_DOTENV_DISABLED="1"
+$env:OPENAI_API_KEY=""
+$env:DB_CONNECTION_STRING="../dados/suporte.db"
+python main.py rodar --agente ../agents/ai-support-operations-agent --entrada "SUP-1042: cliente enterprise informa erro 500 no login em produção para todos os usuários"
+```
+
+Saída resumida esperada:
+
+```text
+[ferramentas] classificar_ticket -> local
+[ferramentas] buscar_tickets_similares -> database
+[planejar] via=deterministic
+
+categoria=authentication
+subcategoria=login_failure
+prioridade=critica
+incidente_ativo=True
+time_recomendado=identity-platform
+confidence_score=0.90
+decisao_final=human_intervention_required
+```
+
+## Exemplo de JSON final
+
+```json
+{
+  "ticket_id": "SUP-1042",
+  "categoria": "authentication",
+  "subcategoria": "login_failure",
+  "prioridade": "critica",
+  "incidente_ativo": true,
+  "documentos_consultados": ["KB-102", "RUNBOOK-AUTH-LOGIN", "INCIDENT-443"],
+  "tickets_similares": ["SUP-HIST-1001", "SUP-HIST-1002"],
+  "time_recomendado": "identity-platform",
+  "fila_recomendada": "support.identity",
+  "confidence_score": 0.9,
+  "necessita_aprovacao_humana": true,
+  "decisao_final": "human_intervention_required"
+}
+```
+
+## Trace auditável
+
+![Preview do trace](docs/assets/trace-preview.svg)
+
+O runtime salva `runtime/trace.json` com cada etapa executada: plano, ferramenta chamada, argumentos, resultado, avaliação de qualidade, tokens, latência e decisão final. Isso permite demonstrar por que o agente recomendou escalonamento humano em vez de simplesmente responder ao cliente.
+
+## Leitura rápida para recrutadores
+
+- Quer ver o impacto? Leia `Problema resolvido`, `Demo rápida` e `Exemplo de JSON final`.
+- Quer ver engenharia de agentes? Leia `Visão de arquitetura`, `Governança operacional` e `Avaliações`.
+- Quer ver extensibilidade? Leia `Guia técnico de integração`, `REST`, `MCP` e `Banco de dados`.
 
 ## Resultado atual dos benchmarks
 
@@ -44,26 +114,19 @@ O runtime é separado do domínio: a lógica operacional fica no Agent Pack, enq
 
 ## Índice rápido
 
-- [O que a ferramenta se propõe a fazer](#o-que-a-ferramenta-se-propoe-a-fazer)
+- [Problema resolvido](#problema-resolvido)
 - [Demo rápida](#demo-rapida)
+- [Exemplo de JSON final](#exemplo-de-json-final)
+- [Trace auditável](#trace-auditavel)
+- [O que a ferramenta se propõe a fazer](#o-que-a-ferramenta-se-propoe-a-fazer)
+- [Demo guiada](#demo-guiada)
 - [Escopo do MVP](#escopo-do-mvp)
-- [Estrutura](#estrutura)
-- [Requisitos](#requisitos)
 - [Validar contratos](#validar-contratos)
 - [Executar uma triagem](#executar-uma-triagem)
 - [Rodar testes](#rodar-testes)
-- [Quando a categoria não está mapeada](#quando-a-categoria-nao-esta-mapeada)
-- [Como diagnosticar problemas de classificação](#como-diagnosticar-problemas-de-classificacao)
 - [Avaliações](#avaliacoes)
 - [Governança operacional](#governanca-operacional)
-- [Segurança contra SQL injection](#seguranca-contra-sql-injection)
 - [Guia técnico de integração](#guia-tecnico-de-integracao)
-- [Variáveis de ambiente](#variaveis-de-ambiente)
-- [Integração REST](#integracao-rest)
-- [Integração com GitHub](#integracao-com-github)
-- [Integração com Azure DevOps](#integracao-com-azure-devops)
-- [Integração com banco de dados](#integracao-com-banco-de-dados)
-- [Checklist de implementação](#checklist-de-implementacao)
 
 ## O que a ferramenta se propõe a fazer
 
@@ -78,13 +141,13 @@ O runtime é separado do domínio: a lógica operacional fica no Agent Pack, enq
 - Registrar auditoria da execução.
 - Bloquear ou marcar para aprovação humana casos de baixa confiança, prioridade alta/crítica, comunicação externa e ações sensíveis.
 
-## Demo rápida
+## Demo guiada
 
 Use `docs/demo.md` para uma demonstração guiada com três cenários: incidente crítico de login, erro em pedido de venda e categoria não mapeada indo para triagem humana.
 
 ## Escopo do MVP
 
-O MVP roda localmente com ferramentas mock determinísticas para permitir testes sem credenciais externas. Quando `OPENAI_API_KEY` estiver disponível, o runtime pode usar LLM no planejamento e em ferramentas mock configuradas para modo LLM.
+O MVP roda localmente com skills de domínio implementadas por adapter `local`, permitindo demonstração sem credenciais externas. O modo `mock` permanece apenas como fallback técnico/compatibilidade; o Agent Pack apresentado usa `local`, `database`, `rest` ou `mcp`.
 
 A ferramenta não fecha tickets, não envia resposta ao cliente, não altera dados do cliente, não promete SLA e não executa automações externas. A saída é uma recomendação operacional auditável para apoiar o humano responsável pelo atendimento.
 
@@ -110,7 +173,7 @@ runtime/
   ciclo.py                # loop de execução
   planejador.py           # decisão da próxima ação
   executor.py             # execução das ferramentas
-  ferramentas.py          # mocks e adapters
+  ferramentas.py          # registry de skills e adapters
   validador.py            # validação dos contratos
   benchmark.py            # benchmark de qualidade
   tool_eval.py            # avaliação de seleção de ferramentas
@@ -226,7 +289,7 @@ Quando uma entrada realmente não bate em nenhuma categoria conhecida, ela tende
 
 Isso significa que o agente gerou um diagnóstico, mas não tem conhecimento suficiente para resolver ou rotear automaticamente. No MVP, `triage` é uma recomendação persistida em SQLite. O runtime tenta usar `dados/suporte.db`; se o arquivo estiver somente leitura, usa `runtime/operacional.db` como fallback. Ainda não existe tela visual para essa fila.
 
-As categorias reconhecidas pelo mock determinístico ficam em `runtime/ferramentas.py`, na função `_classificar_contexto`. Hoje o classificador local cobre:
+As categorias reconhecidas pelo classificador local ficam em `runtime/ferramentas.py`, na função `_classificar_contexto`. Hoje o adapter local cobre:
 
 - `authentication / login_failure`
 - `billing / duplicate_charge`
@@ -293,7 +356,7 @@ cd runtime
 python -c "import sqlite3; c=sqlite3.connect('operacional.db'); print(c.execute('select ticket_id, categoria, subcategoria, fila_recomendada, decisao_final from triagens_pendentes order by criado_em desc').fetchall())"
 ```
 
-6. Se a execução falhar com erro de conexão OpenAI, o runtime faz fallback para o planner mock. Para isolar completamente a regra local, rode com `PYTHON_DOTENV_DISABLED=1` e `OPENAI_API_KEY` vazio, como no primeiro passo.
+6. Se a execução falhar com erro de conexão OpenAI, o runtime faz fallback para o planner determinístico. Para isolar completamente a regra local, rode com `PYTHON_DOTENV_DISABLED=1` e `OPENAI_API_KEY` vazio, como no primeiro passo.
 
 Sinais comuns:
 
@@ -403,7 +466,7 @@ Mesmo que um valor de entrada tente injetar SQL, ele é tratado como valor liter
 O runtime resolve ferramentas a partir de `agents/ai-support-operations-agent/skills.md`. Cada item em `habilidades` declara:
 
 - `nome`: nome usado pelo planner e pelo trace.
-- `tipo_implementacao`: `mock`, `rest`, `database` ou `mcp`.
+- `tipo_implementacao`: `local`, `rest`, `database`, `mcp` ou `mock` apenas como fallback técnico.
 - `entrada`: schema de argumentos que o planner deve montar.
 - `saida`: schema mínimo que o adapter deve devolver.
 - `conexao`: configuração técnica do adapter.
@@ -717,7 +780,7 @@ Configure no `runtime/.env`:
 DB_CONNECTION_STRING=../dados/suporte.db
 ```
 
-Com essa configuração, a ferramenta `buscar_tickets_similares` deixa de usar mock e passa a consultar a tabela `tickets_historicos`.
+Com essa configuração, a ferramenta `buscar_tickets_similares` consulta a tabela `tickets_historicos` pelo adapter `database`.
 
 Exemplo SQLite:
 
@@ -775,7 +838,6 @@ Teste rápido do SQLite:
 
 ```powershell
 cd runtime
-$env:AGENT_MOCK_MODE="deterministic"
 python main.py rodar --agente ../agents/ai-support-operations-agent --entrada "SUP-1042: erro 500 no login em produção"
 ```
 
@@ -805,9 +867,9 @@ Também valide manualmente:
 
 ### Modelo de evolução recomendado
 
-1. Comece com `mock` deterministico para estabilizar regras.
+1. Comece com `local` deterministico para estabilizar regras e demonstrar o comportamento sem credenciais.
 2. Troque uma ferramenta por vez para `rest`, `database` ou `mcp`.
-3. Mantenha `registrar_auditoria` como mock até a leitura estar confiável.
+3. Mantenha `registrar_auditoria` como `local` até a leitura estar confiável.
 4. Habilite comentário interno em GitHub/Azure DevOps.
 5. Depois, e somente com aprovação humana, habilite atualizações operacionais não destrutivas.
 

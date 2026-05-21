@@ -59,6 +59,16 @@ def validar(caminho_agente: str) -> bool:
     for nome in nomes_habilidades - nomes_toolbox:
         avisos.append(f"  [AVISO] ferramenta '{nome}' esta em skills.md mas nao no toolbox.md")
 
+    tipos_implementacao_validos = {"local", "mock", "rest", "database", "mcp"}
+    for habilidade in habilidades.get("habilidades", []):
+        nome = habilidade.get("nome", "<sem_nome>")
+        tipo_implementacao = habilidade.get("tipo_implementacao", "mock")
+        if tipo_implementacao not in tipos_implementacao_validos:
+            erros.append(
+                f"  [ERRO] tipo_implementacao '{tipo_implementacao}' invalido em '{nome}'. "
+                f"Valores: {', '.join(sorted(tipos_implementacao_validos))}"
+            )
+
     # ferramentas obrigatorias devem existir em skills
     for nome in regras.get("ferramentas_obrigatorias", []):
         if nome not in nomes_habilidades:

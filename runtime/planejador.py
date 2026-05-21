@@ -260,9 +260,9 @@ def chamar_llm(percepcao: str, contratos: dict, historico: list = None) -> tuple
     chave_api = os.environ.get("OPENAI_API_KEY")
 
     if not chave_api:
-        tokens_mock = _TOKENS_ZERO.copy()
-        tokens_mock["_modo"] = "mock"
-        return planejador_mock(percepcao, contratos, historico or []), tokens_mock
+        tokens_deterministicos = _TOKENS_ZERO.copy()
+        tokens_deterministicos["_modo"] = "deterministic"
+        return planejador_deterministico(percepcao, contratos, historico or []), tokens_deterministicos
 
     try:
         from openai import OpenAI
@@ -278,10 +278,10 @@ def chamar_llm(percepcao: str, contratos: dict, historico: list = None) -> tuple
             ],
         )
     except Exception as erro:
-        print(f"  [planejar] LLM indisponivel ({erro}); usando planejador mock")
-        tokens_mock = _TOKENS_ZERO.copy()
-        tokens_mock["_modo"] = "mock"
-        return planejador_mock(percepcao, contratos, historico or []), tokens_mock
+        print(f"  [planejar] LLM indisponivel ({erro}); usando planejador deterministico")
+        tokens_deterministicos = _TOKENS_ZERO.copy()
+        tokens_deterministicos["_modo"] = "deterministic"
+        return planejador_deterministico(percepcao, contratos, historico or []), tokens_deterministicos
 
     # extrair uso de tokens
     uso_tokens = _TOKENS_ZERO.copy()
@@ -299,8 +299,8 @@ def chamar_llm(percepcao: str, contratos: dict, historico: list = None) -> tuple
     except (json.JSONDecodeError, IndexError):
         uso_tokens["_modo"] = "llm"
         return {"proxima_acao": "FINALIZAR", "criterio_sucesso": "Resposta da LLM nao interpretavel"}, uso_tokens
-def planejador_mock(percepcao: str, contratos: dict, historico: list = None) -> dict:
-    """Planejador mock generico - percorre as ferramentas em ordem."""
+def planejador_deterministico(percepcao: str, contratos: dict, historico: list = None) -> dict:
+    """Planejador deterministico generico - percorre as ferramentas em ordem."""
     habilidades = contratos.get("habilidades", {}).get("habilidades", [])
     nomes_ferramentas = [habilidade["nome"] for habilidade in habilidades if "nome" in habilidade]
     historico = historico or []
@@ -389,6 +389,11 @@ def planejador_mock(percepcao: str, contratos: dict, historico: list = None) -> 
     if inclui_raciocinio:
         plano["raciocinio"] = f"Todas as ferramentas foram chamadas. Evidencias coletadas: {', '.join(evidencias.keys())}. Posso finalizar com diagnostico."
     return plano
+
+
+def planejador_mock(percepcao: str, contratos: dict, historico: list = None) -> dict:
+    """Alias de compatibilidade para usos antigos."""
+    return planejador_deterministico(percepcao, contratos, historico)
 
 
 def _extrair_entrada_da_percepcao(percepcao: str) -> str:

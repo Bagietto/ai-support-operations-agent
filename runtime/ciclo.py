@@ -1030,7 +1030,7 @@ def rodar(caminho_agente: str, texto_entrada: str, modo: str = None, evento: str
                 estado["plan_execute_total"] = len(passos)
                 print(f"  [plan_execute] plano gerado com {len(passos)} passos")
 
-            modo_planejar = uso_tokens_plano.get("_modo", "mock")
+            modo_planejar = uso_tokens_plano.get("_modo", "deterministic")
             print(f"  [planejar] proxima_acao={plano.get('proxima_acao')} ferramenta={plano.get('nome_ferramenta')} ({marcador_planejar['duracao_ms']}ms, tokens={uso_tokens_plano['total']}, via={modo_planejar})")
 
             # acumular tokens do planejador

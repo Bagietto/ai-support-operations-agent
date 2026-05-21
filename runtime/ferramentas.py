@@ -3,7 +3,8 @@ Ferramentas e Evidencias.
 
 Resolve skills declarados em skills.md para implementacoes reais via adapters.
 O campo tipo_implementacao define como resolver:
-  - mock    → LLM gera dados (Unidades 1 e 2)
+  - local   → regras deterministicas do dominio do Agent Pack
+  - mock    → LLM/fallback tecnico para testes e compatibilidade
   - rest    → rest_adapter.py chama API HTTP
   - database → db_adapter.py executa query parametrizada
   - mcp     → mcp_adapter.py conecta a MCP server
@@ -101,7 +102,7 @@ Regras:
     def funcao(argumentos):
         modo_mock = os.environ.get("AGENT_MOCK_MODE", "deterministic").strip().lower()
         if modo_mock != "llm" and nome in _SUPPORT_TOOLS:
-            dados = _executar_mock_suporte(nome, argumentos or {})
+            dados = _executar_suporte_local(nome, argumentos or {})
             dados["_entrada"] = argumentos or {}
             return {"sucesso": True, "dados": dados, "_tokens": _TOKENS_ZERO.copy()}
 
@@ -241,7 +242,7 @@ def _prioridade(argumentos: dict, contexto: dict) -> dict:
     }
 
 
-def _executar_mock_suporte(nome: str, argumentos: dict) -> dict:
+def _executar_suporte_local(nome: str, argumentos: dict) -> dict:
     contexto = _classificar_contexto(argumentos)
     ticket_id = _ticket_id(argumentos)
     texto = _texto_argumentos(argumentos)
@@ -494,6 +495,13 @@ def _gerar_valor_fallback(tipo_campo: str, nome_campo: str):
 
 def _resolver_adapter(habilidade):
     tipo = habilidade.get("tipo_implementacao", "mock")
+
+    if tipo == "local":
+        try:
+            from adapters.support_ops_adapter import criar_funcao_support_ops
+            return criar_funcao_support_ops(habilidade)
+        except ImportError:
+            return construir_ferramenta(habilidade)
 
     if tipo == "rest":
         try:

@@ -1,12 +1,12 @@
 # skills.md
 
-Ferramentas disponíveis para o agente. No MVP, todas usam `mock`, permitindo execução sem credenciais externas.
+Ferramentas disponíveis para o agente. As habilidades centrais usam implementação `local`, com regras determinísticas do domínio de suporte operacional. Integrações externas podem ser conectadas por `rest`, `database` ou `mcp` sem alterar o contrato do agente.
 
 ```yaml
 habilidades:
   - nome: classificar_ticket
     descricao: classifica o ticket por categoria, subcategoria, domínio e campos ausentes relevantes
-    tipo_implementacao: mock
+    tipo_implementacao: local
     entrada:
       ticket_id: string
       titulo: string
@@ -24,7 +24,7 @@ habilidades:
 
   - nome: calcular_prioridade
     descricao: calcula prioridade por impacto, urgência, risco operacional, ambiente e plano do cliente
-    tipo_implementacao: mock
+    tipo_implementacao: local
     entrada:
       ticket_id: string
       categoria: string
@@ -42,7 +42,7 @@ habilidades:
 
   - nome: analisar_sentimento
     descricao: avalia sentimento, frustração, urgência emocional e risco de churn
-    tipo_implementacao: mock
+    tipo_implementacao: local
     entrada:
       ticket_id: string
       descricao: string
@@ -56,7 +56,7 @@ habilidades:
 
   - nome: buscar_documentacao
     descricao: consulta base de conhecimento, runbooks, FAQ e documentação técnica antes de qualquer resposta
-    tipo_implementacao: mock
+    tipo_implementacao: local
     entrada:
       produto: string
       categoria: string
@@ -118,7 +118,7 @@ habilidades:
 
   - nome: consultar_incidentes
     descricao: verifica incidentes ativos ou históricos relacionados ao produto, categoria e ambiente
-    tipo_implementacao: mock
+    tipo_implementacao: local
     entrada:
       produto: string
       ambiente: string
@@ -134,7 +134,7 @@ habilidades:
 
   - nome: gerar_draft_resposta
     descricao: gera resposta sugerida para cliente, sem envio automático e sem promessa de SLA
-    tipo_implementacao: mock
+    tipo_implementacao: local
     entrada:
       ticket_id: string
       resumo_ticket: string
@@ -151,7 +151,7 @@ habilidades:
 
   - nome: sugerir_roteamento
     descricao: sugere time responsável, fila, tags e necessidade de escalonamento humano
-    tipo_implementacao: mock
+    tipo_implementacao: local
     entrada:
       categoria: string
       subcategoria: string
@@ -169,7 +169,7 @@ habilidades:
 
   - nome: gerar_veredito_suporte
     descricao: consolida classificação, prioridade, contexto RAG, roteamento, confidence score e decisão final
-    tipo_implementacao: mock
+    tipo_implementacao: local
     entrada:
       ticket_id: string
       evidencias: object
@@ -190,7 +190,7 @@ habilidades:
 
   - nome: registrar_auditoria
     descricao: registra trilha auditável da execução, ferramentas usadas, warnings, falhas e decisão final
-    tipo_implementacao: mock
+    tipo_implementacao: local
     entrada:
       ticket_id: string
       ferramentas_utilizadas: list
