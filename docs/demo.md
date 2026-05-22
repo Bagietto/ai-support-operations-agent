@@ -10,9 +10,11 @@ python -m pip install -r requirements.txt
 $env:PYTHON_DOTENV_DISABLED="1"
 $env:OPENAI_API_KEY=""
 $env:DB_CONNECTION_STRING="../dados/suporte.db"
+$env:API_BASE_URL="http://127.0.0.1:8100"
+Start-Process -FilePath python -ArgumentList "../services/incidents_api/server.py" -WindowStyle Hidden
 ```
 
-Essas variáveis deixam a demo local e reproduzível, sem depender de rede ou credenciais externas.
+Essas variáveis deixam a demo local e reproduzível, sem depender de credenciais externas. A API REST local simula um serviço interno de incidentes com fixtures versionadas.
 
 ## Caso 1: Incidente crítico de login
 
@@ -25,7 +27,10 @@ O que observar:
 - `categoria=authentication`
 - `subcategoria=login_failure`
 - prioridade crítica
-- consulta de documentação e tickets históricos
+- `buscar_documentacao -> rag`
+- `buscar_tickets_similares -> database`
+- `consultar_incidentes -> rest`
+- `registrar_auditoria -> audit`
 - `necessita_aprovacao_humana=True`
 - roteamento para `identity-platform`
 
@@ -95,5 +100,8 @@ python main.py comparar --agente ../agents/ai-support-operations-agent --suite .
 - Pipeline operacional com ferramentas obrigatórias.
 - Guardrails para baixa confiança, ações sensíveis e aprovação humana.
 - SQLite como memória histórica e fila de triagem.
+- RAG local em SQLite/FTS para documentação operacional.
+- Auditoria persistida em SQLite.
+- Integração REST local para incidentes.
 - Evals e benchmark por arquitetura cognitiva.
 - Rastreabilidade em `runtime/trace.json`.

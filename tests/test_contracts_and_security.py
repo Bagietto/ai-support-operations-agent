@@ -14,12 +14,15 @@ sys.path.insert(0, str(RUNTIME))
 
 from contratos import carregar_contratos  # noqa: E402
 from ferramentas import _classificar_contexto  # noqa: E402
+from ferramentas import _executar_suporte_local  # noqa: E402
+from adapters.audit_adapter import criar_funcao_audit  # noqa: E402
 from adapters.db_adapter import (  # noqa: E402
     _executar_query_real,
     _substituir_parametros,
     _validar_read_only,
     criar_funcao_database,
 )
+from adapters.rag_adapter import criar_funcao_rag  # noqa: E402
 
 
 class ContractTests(unittest.TestCase):
@@ -46,7 +49,74 @@ class ContractTests(unittest.TestCase):
         self.assertNotIn("mock", tipos.values())
         self.assertEqual(tipos["buscar_tickets_similares"], "database")
         self.assertEqual(tipos["classificar_ticket"], "local")
-        self.assertEqual(tipos["registrar_auditoria"], "local")
+        self.assertEqual(tipos["buscar_documentacao"], "rag")
+        self.assertEqual(tipos["consultar_incidentes"], "rest")
+        self.assertEqual(tipos["registrar_auditoria"], "audit")
+
+    def test_classification_and_priority_read_from_contract_files(self):
+        contratos = carregar_contratos(AGENT)
+        habilidades = {h["nome"]: h for h in contratos["habilidades"]["habilidades"]}
+        entrada = {"descricao": "SUP-1042: erro 500 no login em producao para todos os usuarios", "produto": "plataforma-web"}
+
+        classificacao = _executar_suporte_local("classificar_ticket", entrada, habilidades["classificar_ticket"])
+        prioridade = _executar_suporte_local(
+            "calcular_prioridade",
+            {**entrada, "categoria": classificacao["categoria"], "ambiente": "production", "plano_cliente": "enterprise"},
+            habilidades["calcular_prioridade"],
+        )
+
+        self.assertEqual(classificacao["categoria"], "authentication")
+        self.assertEqual(classificacao["subcategoria"], "login_failure")
+        self.assertEqual(prioridade["prioridade"], "critica")
+
+    def test_rag_adapter_seeds_and_queries_sqlite(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            habilidade = {
+                "nome": "buscar_documentacao",
+                "saida": {
+                    "documentos_consultados": "list",
+                    "trechos_relevantes": "list",
+                    "encontrou_contexto": "bool",
+                    "warnings": "list",
+                },
+                "conexao": {
+                    "connection_string": str(Path(tempdir) / "rag.db"),
+                    "seed_path": str(AGENT / "knowledge" / "documentation_seed.json"),
+                },
+                "limites": {"max_resultados": 3},
+            }
+
+            resultado = criar_funcao_rag(habilidade)(
+                {"produto": "plataforma-web", "categoria": "authentication", "termos_busca": ["login", "erro 500"]}
+            )
+
+            self.assertTrue(resultado["sucesso"])
+            self.assertTrue(resultado["dados"]["encontrou_contexto"])
+            ids = [doc["documento_id"] for doc in resultado["dados"]["documentos_consultados"]]
+            self.assertIn("KB-102", ids)
+
+    def test_audit_adapter_persists_sqlite_rows(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            db_path = Path(tempdir) / "audit.db"
+            habilidade = {"nome": "registrar_auditoria", "conexao": {"connection_string": str(db_path)}}
+            resultado = criar_funcao_audit(habilidade)(
+                {
+                    "ticket_id": "SUP-1042",
+                    "prioridade_final": "critica",
+                    "confidence_score": 0.9,
+                    "necessidade_aprovacao": True,
+                    "decisao_final": "human_intervention_required",
+                }
+            )
+
+            self.assertTrue(resultado["sucesso"])
+            conn = sqlite3.connect(db_path)
+            total = conn.execute("SELECT COUNT(*) FROM auditorias_suporte WHERE ticket_id = 'SUP-1042'").fetchone()[0]
+            eventos = conn.execute("SELECT COUNT(*) FROM auditoria_eventos").fetchone()[0]
+            conn.close()
+
+            self.assertEqual(total, 1)
+            self.assertGreaterEqual(eventos, 5)
 
 
 class SqlSecurityTests(unittest.TestCase):

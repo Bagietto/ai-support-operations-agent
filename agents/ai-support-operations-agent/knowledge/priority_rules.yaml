@@ -1,0 +1,64 @@
+regras_prioridade:
+  - nome: incidente_critico_autenticacao
+    categoria: authentication
+    prioridade: critica
+    impacto_detectado: usuarios bloqueados em producao
+    urgencia_detectada: imediata
+    risco_operacional: alto
+    requer_qualquer_termo:
+      - todos os usuarios
+      - bloqueados
+      - producao
+      - production
+      - erro 500
+
+  - nome: billing_sensivel
+    categoria: billing
+    prioridade: alta
+    impacto_detectado: cliente impactado em operacao sensivel
+    urgencia_detectada: alta
+    risco_operacional: medio
+
+  - nome: pedido_venda_bloqueado
+    categoria: sales_order
+    prioridade: alta
+    impacto_detectado: bloqueio em fluxo operacional de venda
+    urgencia_detectada: alta
+    risco_operacional: medio
+
+  - nome: performance_relevante
+    categoria: performance
+    prioridade: alta
+    impacto_detectado: degradacao relevante de experiencia
+    urgencia_detectada: alta
+    risco_operacional: medio
+
+  - nome: duvida_uso
+    categoria: product_usage
+    prioridade: baixa
+    impacto_detectado: duvida operacional sem bloqueio
+    urgencia_detectada: baixa
+    risco_operacional: baixo
+
+  - nome: contexto_insuficiente
+    categoria: indefinida
+    prioridade: baixa
+    impacto_detectado: impacto nao determinado por falta de contexto
+    urgencia_detectada: baixa
+    risco_operacional: baixo
+
+ajustes:
+  - nome: enterprise_producao
+    quando:
+      plano_cliente: enterprise
+      ambiente:
+        - production
+        - producao
+      prioridade_atual: alta
+    prioridade: critica
+
+padrao:
+  prioridade: media
+  impacto_detectado: impacto parcialmente identificado
+  urgencia_detectada: media
+  risco_operacional: medio

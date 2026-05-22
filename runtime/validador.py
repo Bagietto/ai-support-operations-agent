@@ -59,7 +59,7 @@ def validar(caminho_agente: str) -> bool:
     for nome in nomes_habilidades - nomes_toolbox:
         avisos.append(f"  [AVISO] ferramenta '{nome}' esta em skills.md mas nao no toolbox.md")
 
-    tipos_implementacao_validos = {"local", "mock", "rest", "database", "mcp"}
+    tipos_implementacao_validos = {"local", "mock", "rest", "database", "rag", "audit", "mcp"}
     for habilidade in habilidades.get("habilidades", []):
         nome = habilidade.get("nome", "<sem_nome>")
         tipo_implementacao = habilidade.get("tipo_implementacao", "mock")

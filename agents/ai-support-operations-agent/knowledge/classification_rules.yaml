@@ -1,0 +1,79 @@
+regras_classificacao:
+  - categoria: authentication
+    subcategoria: login_failure
+    dominio: identity
+    time: identity-platform
+    fila: support.identity
+    palavras_chave:
+      - login
+      - sso
+      - autentic
+      - senha
+      - acesso
+    evidencias:
+      - descricao menciona falha de login/autenticacao
+
+  - categoria: billing
+    subcategoria: duplicate_charge
+    dominio: finance
+    time: financeiro
+    fila: support.billing
+    palavras_chave:
+      - cobrado
+      - cobranca
+      - cartao
+      - pagamento
+      - reembolso
+      - cancelar uma das cobrancas
+    evidencias:
+      - descricao menciona cobranca ou cartao
+
+  - categoria: sales_order
+    subcategoria: order_creation_failure
+    dominio: sales_operations
+    time: sales-operations
+    fila: support.sales-orders
+    palavras_chave:
+      - pedido de venda
+      - novo pedido
+      - gerar pedido
+      - ordem de venda
+      - sales order
+    evidencias:
+      - descricao menciona falha em pedido de venda
+
+  - categoria: performance
+    subcategoria: slow_dashboard
+    dominio: platform
+    time: platform-operations
+    fila: support.platform
+    palavras_chave:
+      - lento
+      - lentidao
+      - 30 segundos
+      - dashboard
+      - performance
+    evidencias:
+      - descricao menciona lentidao no dashboard
+
+  - categoria: product_usage
+    subcategoria: report_export
+    dominio: product
+    time: customer-success
+    fila: support.howto
+    palavras_chave:
+      - export
+      - pdf
+      - relatorio
+      - como
+    evidencias:
+      - descricao menciona duvida de exportacao
+
+fallback:
+  categoria: indefinida
+  subcategoria: indefinida
+  dominio: unknown
+  time: triage
+  fila: support.triage
+  evidencias:
+    - ticket sem detalhes suficientes para classificacao precisa

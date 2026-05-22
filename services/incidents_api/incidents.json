@@ -1,0 +1,28 @@
+[
+  {
+    "id": "INC-443",
+    "produto": "plataforma-web",
+    "ambiente": "production",
+    "categoria": "authentication",
+    "status": "investigating",
+    "severidade": "alta",
+    "resumo": "Erro 500 intermitente no login para clientes enterprise",
+    "evidencias": [
+      "aumento de 5xx no identity-service",
+      "incidente aberto pelo monitoramento operacional"
+    ]
+  },
+  {
+    "id": "INC-730",
+    "produto": "analytics",
+    "ambiente": "production",
+    "categoria": "performance",
+    "status": "monitoring",
+    "severidade": "media",
+    "resumo": "Dashboard com latencia elevada apos deploy",
+    "evidencias": [
+      "p95 acima de 30 segundos",
+      "degradacao concentrada em consultas de relatorio"
+    ]
+  }
+]

@@ -7,6 +7,8 @@ O campo tipo_implementacao define como resolver:
   - mock    → LLM/fallback tecnico para testes e compatibilidade
   - rest    → rest_adapter.py chama API HTTP
   - database → db_adapter.py executa query parametrizada
+  - rag     → rag_adapter.py consulta SQLite FTS
+  - audit   → audit_adapter.py persiste auditoria SQLite
   - mcp     → mcp_adapter.py conecta a MCP server
 
 Se tipo_implementacao nao esta definido, usa mock (backward compatible).
@@ -141,7 +143,38 @@ def _ticket_id(argumentos: dict) -> str:
     return match.group(0).upper() if match else str(argumentos.get("ticket_id") or "SUP-0000")
 
 
-def _classificar_contexto(argumentos: dict) -> dict:
+def _resolver_arquivo_contrato(caminho: str) -> Path:
+    path = Path(caminho)
+    if path.is_absolute():
+        return path
+    candidatos = [
+        (Path.cwd() / path).resolve(),
+        (Path(__file__).resolve().parents[1] / path).resolve(),
+        (Path(__file__).resolve().parent / path).resolve(),
+    ]
+    for candidato in candidatos:
+        if candidato.exists():
+            return candidato
+    return candidatos[0]
+
+
+def _carregar_yaml(path: Path) -> dict:
+    try:
+        import yaml
+        return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return {}
+
+
+def _classificar_contexto(argumentos: dict, habilidade: dict = None) -> dict:
+    if habilidade:
+        caminho_regras = habilidade.get("conexao", {}).get("rules_path")
+        if caminho_regras:
+            regras = _carregar_yaml(_resolver_arquivo_contrato(caminho_regras))
+            contexto = _classificar_por_regras(argumentos, regras)
+            if contexto:
+                return contexto
+
     texto = _texto_argumentos(argumentos)
     if any(t in texto for t in ("login", "sso", "autentic", "senha", "acesso")):
         return {
@@ -192,7 +225,43 @@ def _classificar_contexto(argumentos: dict) -> dict:
     }
 
 
-def _prioridade(argumentos: dict, contexto: dict) -> dict:
+def _classificar_por_regras(argumentos: dict, regras: dict) -> dict:
+    texto = _texto_argumentos(argumentos)
+    for regra in regras.get("regras_classificacao", []):
+        palavras = [str(p).lower() for p in regra.get("palavras_chave", [])]
+        if any(palavra in texto for palavra in palavras):
+            contexto = {
+                "categoria": regra.get("categoria", "indefinida"),
+                "subcategoria": regra.get("subcategoria", "indefinida"),
+                "dominio": regra.get("dominio", "unknown"),
+                "time": regra.get("time", "triage"),
+                "fila": regra.get("fila", "support.triage"),
+                "_evidencias_regra": regra.get("evidencias", []),
+            }
+            return contexto
+
+    fallback = regras.get("fallback", {})
+    if fallback:
+        return {
+            "categoria": fallback.get("categoria", "indefinida"),
+            "subcategoria": fallback.get("subcategoria", "indefinida"),
+            "dominio": fallback.get("dominio", "unknown"),
+            "time": fallback.get("time", "triage"),
+            "fila": fallback.get("fila", "support.triage"),
+            "_evidencias_regra": fallback.get("evidencias", []),
+        }
+    return {}
+
+
+def _prioridade(argumentos: dict, contexto: dict, habilidade: dict = None) -> dict:
+    if habilidade:
+        caminho_regras = habilidade.get("conexao", {}).get("rules_path")
+        if caminho_regras:
+            regras = _carregar_yaml(_resolver_arquivo_contrato(caminho_regras))
+            prioridade = _prioridade_por_regras(argumentos, contexto, regras)
+            if prioridade:
+                return prioridade
+
     texto = _texto_argumentos(argumentos)
     categoria = str(argumentos.get("categoria") or contexto["categoria"]).lower()
     ambiente = str(argumentos.get("ambiente") or "").lower()
@@ -242,8 +311,59 @@ def _prioridade(argumentos: dict, contexto: dict) -> dict:
     }
 
 
-def _executar_suporte_local(nome: str, argumentos: dict) -> dict:
-    contexto = _classificar_contexto(argumentos)
+def _prioridade_por_regras(argumentos: dict, contexto: dict, regras: dict) -> dict:
+    texto = _texto_argumentos(argumentos)
+    categoria = str(argumentos.get("categoria") or contexto["categoria"]).lower()
+    ambiente = str(argumentos.get("ambiente") or "").lower()
+    plano = str(argumentos.get("plano_cliente") or "").lower()
+
+    selecionada = None
+    for regra in regras.get("regras_prioridade", []):
+        if str(regra.get("categoria", "")).lower() != categoria:
+            continue
+        termos = [str(t).lower() for t in regra.get("requer_qualquer_termo", [])]
+        if termos and not any(termo in texto for termo in termos):
+            continue
+        selecionada = regra
+        break
+
+    if selecionada:
+        resultado = {
+            "prioridade": selecionada.get("prioridade", "media"),
+            "impacto_detectado": selecionada.get("impacto_detectado", ""),
+            "urgencia_detectada": selecionada.get("urgencia_detectada", ""),
+            "risco_operacional": selecionada.get("risco_operacional", ""),
+        }
+    else:
+        padrao = regras.get("padrao", {})
+        if not padrao:
+            return {}
+        resultado = {
+            "prioridade": padrao.get("prioridade", "media"),
+            "impacto_detectado": padrao.get("impacto_detectado", "impacto parcialmente identificado"),
+            "urgencia_detectada": padrao.get("urgencia_detectada", "media"),
+            "risco_operacional": padrao.get("risco_operacional", "medio"),
+        }
+
+    for ajuste in regras.get("ajustes", []):
+        quando = ajuste.get("quando", {})
+        ambientes = [str(a).lower() for a in quando.get("ambiente", [])]
+        if (
+            str(quando.get("plano_cliente", "")).lower() == plano
+            and ambiente in ambientes
+            and str(quando.get("prioridade_atual", "")).lower() == resultado["prioridade"]
+        ):
+            resultado["prioridade"] = ajuste.get("prioridade", resultado["prioridade"])
+
+    resultado["justificativa_prioridade"] = (
+        f"Prioridade {resultado['prioridade']} por categoria {categoria}, "
+        f"impacto '{resultado['impacto_detectado']}' e urgencia {resultado['urgencia_detectada']}."
+    )
+    return resultado
+
+
+def _executar_suporte_local(nome: str, argumentos: dict, habilidade: dict = None) -> dict:
+    contexto = _classificar_contexto(argumentos, habilidade if nome == "classificar_ticket" else None)
     ticket_id = _ticket_id(argumentos)
     texto = _texto_argumentos(argumentos)
 
@@ -258,11 +378,11 @@ def _executar_suporte_local(nome: str, argumentos: dict) -> dict:
             "subcategoria": contexto["subcategoria"],
             "dominio": contexto["dominio"],
             "campos_ausentes": campos_ausentes,
-            "evidencias_classificacao": _evidencias_classificacao(texto, contexto["categoria"]),
+            "evidencias_classificacao": _evidencias_classificacao(texto, contexto["categoria"], contexto),
         }
 
     if nome == "calcular_prioridade":
-        return _prioridade(argumentos, contexto)
+        return _prioridade(argumentos, contexto, habilidade)
 
     if nome == "analisar_sentimento":
         if any(t in texto for t in ("bloqueados", "urgente", "erro 500", "cancelar", "cobrado")):
@@ -366,8 +486,10 @@ def _executar_suporte_local(nome: str, argumentos: dict) -> dict:
     return {}
 
 
-def _evidencias_classificacao(texto: str, categoria: str) -> list:
+def _evidencias_classificacao(texto: str, categoria: str, contexto: dict = None) -> list:
     evidencias = []
+    if contexto:
+        evidencias.extend(contexto.get("_evidencias_regra", []))
     if "erro 500" in texto:
         evidencias.append("descricao menciona erro 500")
     if "login" in texto or "sso" in texto:
@@ -514,6 +636,20 @@ def _resolver_adapter(habilidade):
         try:
             from adapters.db_adapter import criar_funcao_database
             return criar_funcao_database(habilidade)
+        except ImportError:
+            return construir_ferramenta(habilidade)
+
+    if tipo == "rag":
+        try:
+            from adapters.rag_adapter import criar_funcao_rag
+            return criar_funcao_rag(habilidade)
+        except ImportError:
+            return construir_ferramenta(habilidade)
+
+    if tipo == "audit":
+        try:
+            from adapters.audit_adapter import criar_funcao_audit
+            return criar_funcao_audit(habilidade)
         except ImportError:
             return construir_ferramenta(habilidade)
 

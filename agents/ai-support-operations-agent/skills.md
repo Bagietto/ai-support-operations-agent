@@ -19,6 +19,8 @@ habilidades:
       dominio: string
       campos_ausentes: list
       evidencias_classificacao: list
+    conexao:
+      rules_path: agents/ai-support-operations-agent/knowledge/classification_rules.yaml
     limites:
       chamadas_por_minuto: 30
 
@@ -37,6 +39,8 @@ habilidades:
       urgencia_detectada: string
       risco_operacional: string
       justificativa_prioridade: string
+    conexao:
+      rules_path: agents/ai-support-operations-agent/knowledge/priority_rules.yaml
     limites:
       chamadas_por_minuto: 30
 
@@ -56,7 +60,7 @@ habilidades:
 
   - nome: buscar_documentacao
     descricao: consulta base de conhecimento, runbooks, FAQ e documentação técnica antes de qualquer resposta
-    tipo_implementacao: local
+    tipo_implementacao: rag
     entrada:
       produto: string
       categoria: string
@@ -67,8 +71,13 @@ habilidades:
       trechos_relevantes: list
       encontrou_contexto: bool
       warnings: list
+    conexao:
+      tipo_banco: sqlite
+      seed_path: agents/ai-support-operations-agent/knowledge/documentation_seed.json
+      modo: read_only
     limites:
       chamadas_por_minuto: 30
+      max_resultados: 5
 
   - nome: buscar_tickets_similares
     descricao: recupera tickets parecidos em base SQLite para contexto operacional e padrões recorrentes
@@ -118,7 +127,7 @@ habilidades:
 
   - nome: consultar_incidentes
     descricao: verifica incidentes ativos ou históricos relacionados ao produto, categoria e ambiente
-    tipo_implementacao: local
+    tipo_implementacao: rest
     entrada:
       produto: string
       ambiente: string
@@ -129,6 +138,11 @@ habilidades:
       incidente_ativo: bool
       severidade_incidente: string
       evidencias_incidente: list
+    conexao:
+      endpoint: /api/incidents/search
+      metodo: GET
+      timeout_segundos: 5
+      retries: 1
     limites:
       chamadas_por_minuto: 20
 
@@ -190,7 +204,7 @@ habilidades:
 
   - nome: registrar_auditoria
     descricao: registra trilha auditável da execução, ferramentas usadas, warnings, falhas e decisão final
-    tipo_implementacao: local
+    tipo_implementacao: audit
     entrada:
       ticket_id: string
       ferramentas_utilizadas: list
@@ -204,6 +218,9 @@ habilidades:
       status: string
       eventos_registrados: list
       horario_registro: string
+    conexao:
+      tipo_banco: sqlite
+      modo: append_only
     limites:
       chamadas_por_minuto: 20
 ```

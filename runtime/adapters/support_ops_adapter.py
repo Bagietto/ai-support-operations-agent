@@ -18,7 +18,7 @@ def criar_funcao_support_ops(habilidade: dict):
         # Import tardio evita ciclo de importacao com runtime.ferramentas.
         from ferramentas import _executar_suporte_local
 
-        dados = _executar_suporte_local(nome, argumentos or {})
+        dados = _executar_suporte_local(nome, argumentos or {}, habilidade)
         dados["_entrada"] = argumentos or {}
         return {
             "sucesso": True,

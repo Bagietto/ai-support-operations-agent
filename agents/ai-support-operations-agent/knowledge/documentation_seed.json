@@ -1,0 +1,50 @@
+[
+  {
+    "documento_id": "KB-102",
+    "titulo": "Falhas 5xx no login",
+    "produto": "plataforma-web",
+    "categoria": "authentication",
+    "tags": ["login", "erro 500", "identity-service", "producao"],
+    "conteudo": "Falhas 5xx no login devem ser correlacionadas com incidentes ativos, logs do identity-service e deploys recentes. Para clientes enterprise em producao, manter aprovacao humana antes de comunicar causa raiz."
+  },
+  {
+    "documento_id": "RUNBOOK-AUTH-LOGIN",
+    "titulo": "Runbook de autenticacao e login",
+    "produto": "plataforma-web",
+    "categoria": "authentication",
+    "tags": ["login", "sso", "autenticacao"],
+    "conteudo": "Validar status do provedor de identidade, checar taxa de erro 5xx, confirmar se ha incidente ativo e coletar exemplos de usuario afetado. Nao redefinir credenciais ou alterar configuracoes sem aprovacao."
+  },
+  {
+    "documento_id": "KB-BILLING-201",
+    "titulo": "Cobranca duplicada",
+    "produto": "billing",
+    "categoria": "billing",
+    "tags": ["cobranca", "pagamento", "cartao", "reembolso"],
+    "conteudo": "Casos de cobranca duplicada exigem revisao financeira. O agente pode orientar e encaminhar, mas nao deve executar reembolso automaticamente."
+  },
+  {
+    "documento_id": "RUNBOOK-SALES-ORDER-CREATE",
+    "titulo": "Falha ao gerar pedido de venda",
+    "produto": "sales",
+    "categoria": "sales_order",
+    "tags": ["pedido de venda", "sales order", "erp"],
+    "conteudo": "Falhas ao gerar pedido de venda devem validar cadastro do cliente, permissao comercial, estoque e integracao ERP antes de assumir causa raiz."
+  },
+  {
+    "documento_id": "RUNBOOK-PERF-DASHBOARD",
+    "titulo": "Lentidao no dashboard",
+    "produto": "analytics",
+    "categoria": "performance",
+    "tags": ["dashboard", "lentidao", "performance"],
+    "conteudo": "Lentidao acima de 30 segundos no dashboard deve ser tratada como degradacao operacional. Consultar metricas de plataforma e incidentes ativos antes de responder."
+  },
+  {
+    "documento_id": "KB-EXPORT-PDF",
+    "titulo": "Exportacao de relatorios em PDF",
+    "produto": "analytics",
+    "categoria": "product_usage",
+    "tags": ["relatorio", "pdf", "exportar"],
+    "conteudo": "Relatorios podem ser exportados pelo menu Relatorios, Exportar, PDF quando a permissao esta habilitada para o usuario."
+  }
+]

@@ -9,8 +9,8 @@
   <text x="48" y="106" fill="#93C5FD" font-family="Consolas, monospace" font-size="18">$ python main.py rodar --agente ../agents/ai-support-operations-agent --entrada "SUP-1042: erro 500 no login em producao"</text>
 
   <text x="48" y="154" fill="#E2E8F0" font-family="Consolas, monospace" font-size="18">[ferramentas] classificar_ticket      -> local</text>
-  <text x="48" y="184" fill="#E2E8F0" font-family="Consolas, monospace" font-size="18">[ferramentas] buscar_tickets_similares -> database</text>
-  <text x="48" y="214" fill="#E2E8F0" font-family="Consolas, monospace" font-size="18">[planejar] via=deterministic | tokens=0 | trace_id=49d98f7e6b72</text>
+  <text x="48" y="184" fill="#E2E8F0" font-family="Consolas, monospace" font-size="18">[ferramentas] buscar_documentacao -> rag | consultar_incidentes -> rest</text>
+  <text x="48" y="214" fill="#E2E8F0" font-family="Consolas, monospace" font-size="18">[ferramentas] buscar_tickets_similares -> database | registrar_auditoria -> audit</text>
 
   <rect x="48" y="250" width="1024" height="120" rx="10" fill="#1E293B" stroke="#475569"/>
   <text x="72" y="286" fill="#A7F3D0" font-family="Consolas, monospace" font-size="18">Ticket classificado: authentication / login_failure</text>
@@ -20,5 +20,5 @@
   <rect x="48" y="404" width="1024" height="140" rx="10" fill="#0B1220" stroke="#475569"/>
   <text x="72" y="442" fill="#E2E8F0" font-family="Consolas, monospace" font-size="18">Ferramentas chamadas:</text>
   <text x="72" y="474" fill="#CBD5E1" font-family="Consolas, monospace" font-size="17">classificar_ticket -> calcular_prioridade -> buscar_documentacao -> buscar_tickets_similares</text>
-  <text x="72" y="504" fill="#CBD5E1" font-family="Consolas, monospace" font-size="17">consultar_incidentes -> sugerir_roteamento -> gerar_veredito_suporte -> registrar_auditoria</text>
+  <text x="72" y="504" fill="#CBD5E1" font-family="Consolas, monospace" font-size="17">consultar_incidentes(REST) -> gerar_veredito_suporte -> registrar_auditoria(SQLite)</text>
 </svg>

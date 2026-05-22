@@ -2,7 +2,7 @@
 
 Agente de IA para triagem operacional de tickets de suporte. Ele recebe um ticket em texto livre, coleta evidências, consulta conhecimento operacional, busca casos similares, calcula prioridade, sugere roteamento e gera uma recomendação auditável sem executar ações sensíveis automaticamente.
 
-O projeto foi construído como portfólio técnico: não é apenas um prompt, mas um runtime contract-driven com skills versionáveis, adapters locais, SQLite, trace, replay, benchmark e comparação entre arquiteturas cognitivas.
+O projeto foi construído como portfólio técnico: não é apenas um prompt, mas um runtime contract-driven com skills versionáveis, RAG local em SQLite/FTS, auditoria persistida, integração REST local, trace, replay, benchmark e comparação entre arquiteturas cognitivas.
 
 ![Demo CLI do agente](docs/assets/demo-cli.svg)
 
@@ -23,7 +23,8 @@ O agente reduz:
 
 - Agent Pack declarativo em Markdown/YAML para comportamento, regras, skills, memória e reflexão.
 - Runtime próprio com ciclo `perceber -> planejar -> agir -> avaliar`.
-- Skills reais de domínio via adapter `local` e consulta histórica via SQLite.
+- Skills reais de domínio via adapter `local`, RAG SQLite/FTS, REST local e auditoria persistida.
+- Classificação e prioridade configuradas por YAML, não hardcoded no runtime.
 - Guardrails para baixa confiança, prioridade crítica e aprovação humana.
 - Trace auditável, replay, telemetria, evals e benchmarks.
 - Comparação entre arquiteturas `react`, `plan_execute` e `reflect`.
@@ -35,6 +36,8 @@ cd runtime
 $env:PYTHON_DOTENV_DISABLED="1"
 $env:OPENAI_API_KEY=""
 $env:DB_CONNECTION_STRING="../dados/suporte.db"
+$env:API_BASE_URL="http://127.0.0.1:8100"
+Start-Process -FilePath python -ArgumentList "../services/incidents_api/server.py" -WindowStyle Hidden
 python main.py rodar --agente ../agents/ai-support-operations-agent --entrada "SUP-1042: cliente enterprise informa erro 500 no login em produção para todos os usuários"
 ```
 
@@ -42,7 +45,10 @@ Saída resumida esperada:
 
 ```text
 [ferramentas] classificar_ticket -> local
+[ferramentas] buscar_documentacao -> rag
 [ferramentas] buscar_tickets_similares -> database
+[ferramentas] consultar_incidentes -> rest
+[ferramentas] registrar_auditoria -> audit
 [planejar] via=deterministic
 
 categoria=authentication
@@ -63,13 +69,14 @@ decisao_final=human_intervention_required
   "subcategoria": "login_failure",
   "prioridade": "critica",
   "incidente_ativo": true,
-  "documentos_consultados": ["KB-102", "RUNBOOK-AUTH-LOGIN", "INCIDENT-443"],
+  "documentos_consultados": ["KB-102", "RUNBOOK-AUTH-LOGIN"],
   "tickets_similares": ["SUP-HIST-1001", "SUP-HIST-1002"],
   "time_recomendado": "identity-platform",
   "fila_recomendada": "support.identity",
   "confidence_score": 0.9,
   "necessita_aprovacao_humana": true,
-  "decisao_final": "human_intervention_required"
+  "decisao_final": "human_intervention_required",
+  "auditoria": "persistida_em_sqlite"
 }
 ```
 
@@ -178,6 +185,8 @@ runtime/
   benchmark.py            # benchmark de qualidade
   tool_eval.py            # avaliação de seleção de ferramentas
   memory_eval.py          # avaliação de impacto de memória
+services/
+  incidents_api/          # API REST local de incidentes para demo
 ```
 
 ## Requisitos
@@ -204,8 +213,17 @@ Use este comando depois de alterar `agent.md`, `rules.md`, `skills.md`, `memory.
 
 ## Executar uma triagem
 
+Em outro terminal, suba a API REST local de incidentes:
+
+```powershell
+python services/incidents_api/server.py
+```
+
+Depois execute o agente:
+
 ```powershell
 cd runtime
+$env:API_BASE_URL="http://127.0.0.1:8100"
 python main.py rodar --agente ../agents/ai-support-operations-agent --entrada "SUP-1042: cliente enterprise não consegue fazer login em produção, erro 500 desde hoje cedo"
 ```
 
@@ -466,7 +484,7 @@ Mesmo que um valor de entrada tente injetar SQL, ele é tratado como valor liter
 O runtime resolve ferramentas a partir de `agents/ai-support-operations-agent/skills.md`. Cada item em `habilidades` declara:
 
 - `nome`: nome usado pelo planner e pelo trace.
-- `tipo_implementacao`: `local`, `rest`, `database`, `mcp` ou `mock` apenas como fallback técnico.
+- `tipo_implementacao`: `local`, `rag`, `database`, `rest`, `audit`, `mcp` ou `mock` apenas como fallback técnico.
 - `entrada`: schema de argumentos que o planner deve montar.
 - `saida`: schema mínimo que o adapter deve devolver.
 - `conexao`: configuração técnica do adapter.
@@ -484,6 +502,7 @@ Atalhos desta seção:
 
 - [Variáveis de ambiente](#variaveis-de-ambiente)
 - [REST](#integracao-rest)
+- [RAG SQLite](#rag-sqlite)
 - [GitHub](#integracao-com-github)
 - [Azure DevOps](#integracao-com-azure-devops)
 - [Banco de dados](#integracao-com-banco-de-dados)
@@ -573,6 +592,48 @@ Contrato esperado da API:
 - Receber query params derivados dos campos de `entrada`.
 - Responder JSON com os campos declarados em `saida`.
 - Retornar erro HTTP quando a consulta falhar; o runtime registra falha e segue as políticas de retry/fallback.
+
+Este repositório inclui uma API REST local para incidentes em `services/incidents_api/`. Ela usa fixtures versionadas em `incidents.json` e permite demonstrar integração HTTP real sem depender de serviços externos:
+
+```powershell
+python services/incidents_api/server.py
+```
+
+Com `API_BASE_URL=http://127.0.0.1:8100`, a skill `consultar_incidentes` passa pelo `rest_adapter.py` e retorna incidentes compatíveis com o contrato da skill.
+
+### RAG SQLite
+
+A skill `buscar_documentacao` usa `tipo_implementacao: rag`. O adapter fica em:
+
+```text
+runtime/adapters/rag_adapter.py
+```
+
+Ele inicializa uma base SQLite com FTS5 a partir de:
+
+```text
+agents/ai-support-operations-agent/knowledge/documentation_seed.json
+```
+
+Esse desenho mantém a demo simples para recrutadores:
+
+- não exige serviço vetorial externo;
+- permite versionar runbooks e artigos de conhecimento;
+- retorna documentos, trechos relevantes, score e warnings;
+- usa `DB_CONNECTION_STRING` para persistir a base localmente.
+
+Exemplo de skill:
+
+```yaml
+- nome: buscar_documentacao
+  tipo_implementacao: rag
+  conexao:
+    tipo_banco: sqlite
+    seed_path: agents/ai-support-operations-agent/knowledge/documentation_seed.json
+    modo: read_only
+  limites:
+    max_resultados: 5
+```
 
 ### Integração com GitHub
 
@@ -781,6 +842,12 @@ DB_CONNECTION_STRING=../dados/suporte.db
 ```
 
 Com essa configuração, a ferramenta `buscar_tickets_similares` consulta a tabela `tickets_historicos` pelo adapter `database`.
+
+O mesmo SQLite também é usado para:
+
+- documentos do RAG (`documentos_suporte` e `documentos_suporte_fts`);
+- auditorias persistidas (`auditorias_suporte` e `auditoria_eventos`);
+- histórico de tickets similares (`tickets_historicos`).
 
 Exemplo SQLite:
 

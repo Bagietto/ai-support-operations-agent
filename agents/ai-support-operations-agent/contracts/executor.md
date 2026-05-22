@@ -17,6 +17,7 @@ execucao:
       - local
       - arquivo
     consultar_incidentes:
+      - rest
       - local
       - arquivo
 
